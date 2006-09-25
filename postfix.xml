@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<book lang="pt_BR">
+  <title>Postfix - Guia de Implementação</title>
+
+  <bookinfo>
+    <date>24/09/2006</date>
+
+    <abstract>
+      <para>Guia de Implementação para o Postfix que procura apresentar e
+      discutir as diversas decisões de configurações disponíveis aos
+      administrador de sistemas</para>
+    </abstract>
+
+    <author>
+      <firstname>Yves</firstname>
+
+      <surname>Junqueira</surname>
+
+      <email>yves@cetico.org</email>
+
+      <address><otheraddr><ulink url="http://cetico.org">http://cetico.org</ulink></otheraddr></address>
+    </author>
+  </bookinfo>
+
+  <chapter>
+    <title>Introdução</title>
+
+    <section>
+      <title>Introdução ao Postfix</title>
+
+      <para>O Postfix é um sistema de correio eletrônico criado para
+      substituir o sendmail.</para>
+    </section>
+
+    <section>
+      <title>Por quê utilizar o Postfix</title>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>Outras referências</title>
+
+      <para></para>
+    </section>
+  </chapter>
+
+  <chapter id="arquitetura">
+    <title>Arquitetura</title>
+
+    <para>Para se implementar um sistema de correio eletrônico utilizando
+    Postfix, várias decisões de implementação precisam ser tomadas pelo
+    administrador. Para isso, é necessário que se compreenda o funcionamento
+    do Postfix e suas principais características. Muitos iniciantes sentem
+    dificuldades em analisar os logs e resolver problemas pois não conhecem os
+    mecanismos e as engrenagens do programa, talvez por terem aprendido a
+    utilizar Postfix lendo apenas <foreignphrase>how-to's</foreignphrase> e
+    tutoriais, com medo de se aventurar a ler a rica documentação do sistema,
+    apenas disponível em inglês.</para>
+
+    <para>Este livro tenta ir além. Mostrar o passo-a-passo é muito
+    importante, mas talvez mais importante é ensinar a lógica e mostrar como
+    as coisas funcionam. Este capítulo, dedicado a explicar a arquitetura do
+    Postfix, requer uma leitura atenciosa. Entenda o Postfix, e não se
+    preocupe em memorizar parâmetros de configuração - afinal, é para isso que
+    servem as <emphasis>man pages</emphasis> e o <ulink
+    url="http://www.google.com.br">Google</ulink>.</para>
+
+    <section>
+      <title>Módulos e serviços</title>
+
+      <para>O Postfix funciona através do trabalho em conjunto de diversos
+      <foreignphrase>daemons</foreignphrase> independentes. Essa é uma
+      característica importante do Postfix em contraste com outros softwaes
+      MTA.</para>
+
+      <section>
+        <title>Segurança</title>
+
+        <para>A modularidade do Postix provê maior segurança. Se um dos
+        daemons for comprometido por um ataque, os demais provavelmente não
+        serão afetados. Além disso, é possível rodar vários desses daemons em
+        ambientes isolados com <link linkend="tarefa_chroot">chroot</link>
+        que, se por um lado confunde a vida de iniciantes, é um recurso que
+        muitos administradores valorizam. <!--na wikipedia, fala-se que postfix é famoso por ser pouco vulnerável a buffer overflows. por que?--></para>
+
+        <para>A separação de privilégios no Postfix é rígida. Os daemons que
+        exigem root são apenas master, pipe, virtual e local. O master
+        gerencia a execução de todos os daemons, os daemons virtual e local
+        fazem a entrega de mensagens nas caixas locais dos usuários, enquanto
+        pipe passa as mensagens para programas especiais. Para isso, executam
+        como usuário privilegiado, isto é, root.</para>
+
+        <para>Ao receber uma conexão remota, como veremos, o master chama o
+        smtpd, que processará a mensagem utilizando um usuário
+        desprivilegiado. Na teoria, deixar o trabalho sujo ser feito por um
+        usuário comum do sistema é uma boa idéia. Na prática, a história
+        mostra que o Postfix é um sistema extremamente seguro, com
+        pouquíssimas vulnerabilidades identificadas até hoje, nenhuma
+        particularmente séria.<footnote>
+            <para>Veja <ulink
+            url="http://www.securityfocus.com/vulnerabilities">http://www.securityfocus.com/vulnerabilities</ulink>.
+            No campo <emphasis>Vendor</emphasis> escolha <emphasis>Wietse
+            Venema</emphasis>, e em <emphasis>Title</emphasis> escolha
+            <emphasis>Postfix</emphasis>.</para>
+          </footnote></para>
+      </section>
+
+      <section>
+        <title>Divisão de tarefas e fluxo de processos</title>
+
+        <para></para>
+      </section>
+    </section>
+
+    <section>
+      <title>Gargalos de performance</title>
+
+      <para></para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Instalação</title>
+
+    <sect1 id="preparando_o_ambiente">
+      <title id="preparando_o_ambiente_titulo">Preparando o ambiente</title>
+
+      <para>Para implementar o Postfix, é necessário ter disponível um sistema
+      operacional que suporte esse software. O Postfix roda em praticamente
+      todos os <trademark class="registered">UNIX</trademark> modernos,
+      incluíndo GNU/Linux, *BSD, <trademark
+      class="registered">Solaris</trademark> e <trademark
+      class="registered">MacOS X</trademark>.<!--Rever marcas registradas--> A
+      instalação do S.O. é, naturalmente, tarefa do leitor e está fora do
+      escopo deste livro. Para simplificar a vida, caso necessite um
+      direcionamento, sugiro que começe com distribuições do GNU/Linux que
+      possuam uma grande base de usuários no Brasil e com comunidades
+      amigáveis para lhe ajudar em tempos difíceis. Ubuntu e Debian, por
+      experiência pessoal do autor, são opções evidentes, mas é melhor que o
+      próprio leitor olhe em volta e veja o que as pessoas andam
+      usando.</para>
+
+      <para>Com o SO configurado, incluindo conexões de rede e, provavelmente,
+      acesso à Internet, veja se o Postfix já não está instalado em seu
+      sistema. Diversos sistemas operacionais e distribuições GNU/Linux
+      integram o Postfix por padrão, incluindo mas não se limitando a:
+      Mandriva, Ubuntu, SuSE, Red Hat e NetBSD<!--Verificar se esta lista é válida.-->.</para>
+    </sect1>
+
+    <sect1>
+      <title>Instalação em servidores
+      <foreignphrase>Debian-like</foreignphrase></title>
+
+      <para>A instalação do Postfix em sistemas baseados em Debian é bastante
+      simples. Geralmente, apenas um comando é suficiente para fazer a
+      instalação:<note>
+          <para>Em sistemas Ubuntu, para executar comandos como root, adicione
+          <command>sudo</command> antes do comando.</para>
+        </note><programlisting><command># aptitude install postfix</command></programlisting></para>
+
+      <para>É necessário ter cuidado pois este comando irá substituir outro
+      MTA que estiver instalado. Se for o caso, certifique-se de que ele não
+      possua configurações locais específicas e só o remova se estiver certo
+      do que está fazendo. No caso do Debian 3.1, o Exim é o MTA instalado por
+      padrão, portanto será substituído. Se você usa Ubuntu, como explicado
+      anteriormente, o Postfix já deve estar instalado, portanto geralmente
+      isso não será problema.</para>
+
+      <para>Para garantir que o serviço do Postfix tenha sido iniciado,
+      execute:</para>
+
+      <programlisting><command># /etc/init.d/postfix start</command>
+ <computeroutput>* Starting Postfix Mail Transport Agent postfix                         [ ok ]</computeroutput></programlisting>
+
+      <para>Há outros pacotes especiais disponíveis no Debian com o Postfix
+      contendo funcionalidades extras, algumas necessárias para seguir este
+      livro:</para>
+
+      <table>
+        <title>Alguns pacotes relacionados ao Postfix no Debian</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry>postfix-dev</entry>
+
+              <entry>Cabeçalhos e bibliotecas para desenvolvimento de módulos
+              do Postfix</entry>
+            </row>
+
+            <row>
+              <entry>postfix-doc</entry>
+
+              <entry>Documentação</entry>
+            </row>
+
+            <row>
+              <entry>postfix-ldap</entry>
+
+              <entry>Suporte a mapas LDAP</entry>
+            </row>
+
+            <row>
+              <entry>postfix-mysql</entry>
+
+              <entry>Suporte a mapas MySQL</entry>
+            </row>
+
+            <row>
+              <entry>postfix-pcre</entry>
+
+              <entry>Suporte a mapas PCRE (Expressões regulares compatíveis
+              com Perl)</entry>
+            </row>
+
+            <row>
+              <entry>postfix-pgsql</entry>
+
+              <entry>Suporte a mapas PostgreSQL</entry>
+            </row>
+
+            <row>
+              <entry>amavisd-new</entry>
+
+              <entry>Integrador de software antivírus e anti-spam para o
+              Postfix (preferível ao amavis-ng)</entry>
+            </row>
+
+            <row>
+              <entry>amavis-ng</entry>
+
+              <entry>Integrador de software antivírus para o Postfix</entry>
+            </row>
+
+            <row>
+              <entry>libspf2-2</entry>
+
+              <entry>Biblioteca SPF, geralmente <!--geralmente? -->necessária
+              para utilização SPF (<foreignphrase>Sender Policy
+              Framework</foreignphrase>)</entry>
+            </row>
+
+            <row>
+              <entry>mailgraph</entry>
+
+              <entry>Estatísticas gráficas de logs do Postfix utilizando
+              RRDtool</entry>
+            </row>
+
+            <row>
+              <entry>pflogsumm</entry>
+
+              <entry>Sumarizador de logs do Postfix</entry>
+            </row>
+
+            <row>
+              <entry>postgrey</entry>
+
+              <entry>Implementação de <foreignphrase>greylist</foreignphrase>
+              para o Postfix</entry>
+            </row>
+
+            <row>
+              <entry>postfix-gld</entry>
+
+              <entry>Implementação de <foreignphrase>greylist</foreignphrase>
+              para o Postfix</entry>
+            </row>
+
+            <row>
+              <entry>postfix-policyd</entry>
+
+              <entry>Plugin anti-spam</entry>
+            </row>
+
+            <row>
+              <entry>postfix-smtpguard</entry>
+
+              <entry>Plugin anti-spam</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>Veja mais informações sobre cada um digitando o comando:</para>
+
+      <para><command>apt-cache show
+      <replaceable>pacote</replaceable></command></para>
+
+      <para></para>
+    </sect1>
+
+    <sect1>
+      <title>Instalação em servidores Fedora</title>
+
+      <para></para>
+    </sect1>
+
+    <sect1>
+      <title>Instalação em servidores OpenSuSE</title>
+
+      <para></para>
+    </sect1>
+
+    <sect1>
+      <title>Instalação em servidores FreeBSD</title>
+
+      <para></para>
+    </sect1>
+
+    <sect1>
+      <title>Outros sistemas</title>
+
+      <para>Como mencionado em <xref endterm="preparando_o_ambiente_titulo"
+      linkend="preparando_o_ambiente" />, o Postfix é suportado por diversos
+      sistemas operacionais baseados em UNIX e por todas as distribuições
+      GNU/Linux populares. Infelizmente, é impossível detalhar o processo de
+      instalação em todos esses ambientes, assim nos limitamos a mostrar o
+      caminho para os sistemas mais populares. Caso não utilize um dos
+      sistemas mencionados, consulte sua documentação para entender como
+      instalar um novo software no seu sistema operacional. Em alguns casos,
+      haverá pacotes binários disponíveis, em outros o Postfix deverá ser
+      compilado, mas provavelmente esse processo é simples graças à ajuda de
+      scripts de construção, como acontece no Gentoo. <!--e slack?--> Veja mas
+      informações em <ulink
+      url="http://www.postfix.org/packages.html">http://www.postfix.org/packages.html</ulink>.</para>
+
+      <para>sdasda</para>
+    </sect1>
+
+    <sect1>
+      <title>Testando a instalação</title>
+
+      <para>Caso a instalação tenha sido feita com sucesso, alguns comandos
+      estarão disponíveis em seu ambiente. Tente, por exemplo, executar o
+      seguinte comando, que mostra os atuais parâmetros de configuração do
+      Postfix:</para>
+
+      <para><programlisting><command># postconf</command>
+<computeroutput>2bounce_notice_recipient = postmaster
+access_map_reject_code = 554
+address_verify_default_transport = $default_transport
+address_verify_local_transport = $local_transport
+(saída restante omitida)</computeroutput></programlisting></para>
+
+      <para>Um daemon denominado <application>master</application> deverá
+      estar escutando na porta tcp:25. Para testar, execute:<programlisting><command># telnet 0.0.0.0 25</command>
+<computeroutput>Trying 0.0.0.0...
+Connected to 0.0.0.0.
+Escape character is '^]'.
+220 localhost.localdomain ESMTP Postfix (Ubuntu)</computeroutput></programlisting></para>
+
+      <para>Caso não funcione, certifique-se que o serviço do Postfix foi
+      iniciado e verifique os <link linkend="logs">logs</link> em busca de
+      erros. Tente também se conectar na porta 25 do seu servidor a partir de
+      outro computador na rede. É possível que não funcione, pois em algumas
+      instalações<footnote>
+          <para>Por exemplo, Debian e Ubuntu</para>
+        </footnote>, para prover maior segurança, o Postfix escuta
+      inicialmente apenas na interface de loopback, isto é, no endereço
+      127.0.0.1, portanto não pode ser acessado externamente pela rede. Para
+      que você possa <emphasis>receber</emphasis> e-mails de servidores
+      externos, altere o parâmetro <link
+      linkend="inet_interfaces">inet_interfaces</link> no main.cf para
+      <userinput>all</userinput>, ou veja o apêndice para mais informações. Se
+      este servidor irá apenas <emphasis>enviar</emphasis> e-mails, é mais
+      seguro utilizar o valor <userinput>loopback-only</userinput>.</para>
+
+      <para>Envie um e-mail para o usuário <emphasis>root</emphasis> e analise
+      os <link linkend="logs">logs</link><footnote>
+          <para>Como explicado no capítulo sobre <link
+          linkend="arquitetura">Arquitetura</link>, é possível enviar e-mails
+          locais sem que o Postfix esteja rodando.</para>
+        </footnote>:</para>
+
+      <para><programlisting><command># mail root</command>
+<computeroutput>Subject:</computeroutput><userinput> Teste teste
+Este é uma mensgem de teste. Favor desconsiderar
+.
+<computeroutput>Cc:</computeroutput>
+<command># tail /var/log/mail.log
+
+</command><computeroutput>Sep 24 05:54:55 localhost postfix/pickup[13599]: 095EFE04C4: uid=1000 from=&lt;yves&gt;
+Sep 24 05:54:55 localhost postfix/cleanup[13618]: 095EFE04C4: message-id=&lt;20060924085455.095EFE04C4@localhost.localdomain&gt;
+Sep 24 05:54:55 localhost postfix/qmgr[4188]: 095EFE04C4: from=&lt;yves@localhost.localdomain&gt;, size=334, nrcpt=1 (queue active)
+Sep 24 05:54:55 localhost postfix/local[13620]: 095EFE04C4: to=&lt;yves@localhost.localdomain&gt;, orig_to=&lt;root&gt;, relay=local, delay=0.46, delays=0.23/0.07/0/0.16, dsn=2.0.0, status=sent (delivered to mailbox)
+Sep 24 05:54:55 localhost postfix/qmgr[4188]: 095EFE04C4: removed</computeroutput></userinput></programlisting></para>
+
+      <para>Este é um log típico de um Postfix recém configurado. Veja que há
+      diversas linhas criadas por <link
+      linkend="serviços"><foreignphrase>daemons</foreignphrase></link>
+      diferentes, contendo sempre a identificação da mensagem e o resultado
+      das operações de cada <foreignphrase>daemon</foreignphrase>. Para mais
+      informações, veja <xref endterm="logs_title" linkend="logs" />.</para>
+
+      <para>Neste exemplo, a mensagem foi entregue para o usuário
+      <emphasis>yves</emphasis>, já que <emphasis>root</emphasis> é um <link
+      linkend="alias">alias</link> para esta caixa. </para>
+    </sect1>
+  </chapter>
+
+  <chapter>
+    <title>Tarefas comuns</title>
+
+    <para></para>
+
+    <section>
+      <title>Segurança</title>
+
+      <para></para>
+
+      <section id="tarefa_chroot">
+        <title>Melhorando a segurança com chroot</title>
+
+        <para></para>
+      </section>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Resolvendo Problemas</title>
+
+    <para><!--Inserir aqui um parágrafo sobre origem de problemas, suas consequências e listas os métodos de solução--></para>
+
+    <section id="logs">
+      <title id="logs_title">Análise de logs</title>
+
+      <para>Uma das principais habilidades de um administrador de sistemas é
+      sua capacidade de encontrar, analisar e compreender logs.<!--continua...--></para>
+
+      <section>
+        <title>Localização dos logs</title>
+
+        <para>A localização dos logs do Postfix é diferente em cada
+        distribuição e sistema. Na maioria dos casos, isso é configurado no
+        arquivo <filename>/etc/syslog.conf</filename>, cujos valores padrões
+        dependem da sua distribuição. A lista a seguir mostra algumas
+        possíveis localizações para os logs. Em caso de dúvidas, veja a
+        configuração do seu sistema de logs e a documentação da sua
+        distribuição.</para>
+
+        <table>
+          <title>Caminhos comuns dos arquivos de logs do Postfix</title>
+
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry>/var/log/mail.log, /var/log/maillog</entry>
+
+                <entry>Todas as mensagens do sistema de e-mail</entry>
+              </row>
+
+              <row>
+                <entry>/var/log/mail.err</entry>
+
+                <entry>Apenas mensagens de erro</entry>
+              </row>
+
+              <row>
+                <entry>/var/log/mail.info</entry>
+
+                <entry>Apenas mensagens informativas</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+    </section>
+  </chapter>
+
+  <appendix>
+    <title>Glossário</title>
+
+    <para><glosslist>
+        <glossentry id="alias">
+          <glossterm>Alias</glossterm>
+
+          <glossdef>
+            <para>Literalmente, é o apelido de uma caixa. Se os e-mails para
+            <emphasis>root@exemplo.com.br</emphasis> são redirecionados para
+            <emphasis>joao@exemplo.com.br</emphasis>, root é um alias de
+            joao.</para>
+          </glossdef>
+        </glossentry>
+
+        <glossentry>
+          <glossterm>MTA</glossterm>
+
+          <glossdef>
+            <para>Agente de Transferência de E-mails, do inglês
+            <foreignphrase>Mail Transfer Agent</foreignphrase>. </para>
+          </glossdef>
+        </glossentry>
+
+        <glossentry id="serviços">
+          <glossterm>Serviços do Postfix</glossterm>
+
+          <glossdef>
+            <para>O Postfix funciona em módulos independentes. Cada módulo
+            implementa um serviço que executa funções específicas. Veja a
+            seção sobre <link linkend="arquitetura">arquitetura</link> do
+            Postfix.</para>
+          </glossdef>
+        </glossentry>
+      </glosslist></para>
+  </appendix>
+
+  <appendix>
+    <title>Parâmetros de configuração</title>
+
+    <note>
+      <para>Na versão 2.2.3, o Postfix possui 540 parâmetros de configuração.
+      Iremos listar aqui apenas os mais importantes e aqueles citados no
+      restante do livro. Para mais informações, consulte a página de manual
+      <filename>postconf(5)</filename>.</para>
+    </note>
+
+    <variablelist>
+      <varlistentry id="inet_interfaces" xreflabel="">
+        <term>inet_interfaces = <userinput>all</userinput></term>
+
+        <listitem>
+          <para>Define em quais interfaces o daemon master irá
+          escutar<blockquote>
+              <title>Opções</title>
+
+              <informaltable>
+                <tgroup cols="2">
+                  <tbody>
+                    <row>
+                      <entry>all</entry>
+
+                      <entry>Escuta em todas as interfaces de rede</entry>
+                    </row>
+
+                    <row>
+                      <entry>loopback-only <emphasis>(&gt;=
+                      2.2)</emphasis></entry>
+
+                      <entry>Escuta apenas na interface de
+                      <foreignphrase>loopback</foreignphrase> - geralmente,
+                      127.0.0.1. Utilizando este valor, seu sistema estará
+                      mais seguro, entretanto outros servidores não serão
+                      capazes de conectar-se a ele para entregar
+                      mensagens.</entry>
+                    </row>
+
+                    <row>
+                      <entry>10.1.0.1, 10.1.0.3</entry>
+
+                      <entry>Escuta apenas nos endereços especificados</entry>
+                    </row>
+                  </tbody>
+                </tgroup>
+              </informaltable>
+            </blockquote></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>invalid_hostname_reject_code = <userinput>501</userinput></term>
+
+        <listitem>
+          <para>Especifica o código de retorno quando o parâmetro HELO ou EHLO
+          do cliente for rejeitado pela restrição
+          <varname>reject_invalid_helo_hostname</varname>.<caution>
+              <para>Recomenda-se não alterar este valor</para>
+            </caution></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para></para>
+  </appendix>
+</book>
