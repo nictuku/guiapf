@@ -73,7 +73,7 @@
 
       <para>O Postfix funciona através do trabalho em conjunto de diversos
       <foreignphrase>daemons</foreignphrase> independentes. Essa é uma
-      característica importante do Postfix em contraste com outros softwaes
+      característica importante do Postfix em contraste com outros softwares
       MTA.</para>
 
       <section>
@@ -84,7 +84,7 @@
         serão afetados. Além disso, é possível rodar vários desses daemons em
         ambientes isolados com <link linkend="tarefa_chroot">chroot</link>
         que, se por um lado confunde a vida de iniciantes, é um recurso que
-        muitos administradores valorizam. <!--na wikipedia, fala-se que postfix é famoso por ser pouco vulnerável a buffer overflows. por que?--></para>
+        muitos administradores valorizam.<!--na wikipedia, fala-se que postfix é famoso por ser pouco vulnerável a buffer overflows. por que?--></para>
 
         <para>A separação de privilégios no Postfix é rígida. Os daemons que
         exigem root são apenas master, pipe, virtual e local. O master
@@ -99,19 +99,34 @@
         usuário comum do sistema é uma boa idéia. Na prática, a história
         mostra que o Postfix é um sistema extremamente seguro, com
         pouquíssimas vulnerabilidades identificadas até hoje, nenhuma
-        particularmente séria.<footnote>
+        particularmente preocupante.<footnote>
             <para>Veja <ulink
             url="http://www.securityfocus.com/vulnerabilities">http://www.securityfocus.com/vulnerabilities</ulink>.
             No campo <emphasis>Vendor</emphasis> escolha <emphasis>Wietse
             Venema</emphasis>, e em <emphasis>Title</emphasis> escolha
             <emphasis>Postfix</emphasis>.</para>
           </footnote></para>
+
+        <para><!--Para citar uma curiosidade histórica, uma grande controvérsia foi criada em 1998, quando Daniel J. Bernstein, professor da 
+Univesity of Illinois at Chicago e autor do qmail, http://cr.yp.to/maildisasters/postfix.html
+apontou falhas de segurança do recém lançado IBM Secure Mailer, antigo nome do Postfix. Entre as vulnerabilidades apontadas, 
+a mais séria permitia que usuários locais fossem capazes de apagar mensagens na fila do Postfix. Bastaria criar um link para a 
+mensagem e o Postfix, notando que o arquivo tinha links a mais, deixaria de entregar a mensagem e apagaria o arquivo. Assim,
+ o e-mail se perderia e não haveria rastros do ocorrido..............problema corrigido ou não?--></para>
       </section>
 
       <section>
         <title>Divisão de tarefas e fluxo de processos</title>
 
-        <para></para>
+        <para>Quando o Postfix recebe um e-mail, até que o mesmo seja entregue
+        ao destino final, a mensagem passa por vários daemons. Esse
+        revezamento fica evidente nos <link linkend="logs">logs</link>.
+        Conhecer a função de cada daemon é importante para que o administrador
+        consiga interpretar as mensagens do Postfix e, assim, resolva
+        problemas. <!--inserir aqui uma imagem reproduzindo o fluxo de uma mensagem--></para>
+
+        <para>O Postfix pode receber mensagens pela rede ou localmente.
+        </para>
       </section>
     </section>
 
@@ -147,7 +162,7 @@
       acesso à Internet, veja se o Postfix já não está instalado em seu
       sistema. Diversos sistemas operacionais e distribuições GNU/Linux
       integram o Postfix por padrão, incluindo mas não se limitando a:
-      Mandriva, Ubuntu, SuSE, Red Hat e NetBSD<!--Verificar se esta lista é válida.-->.</para>
+      Mandriva, Ubuntu, SuSE, Red Hat e NetBSD<!--Verificar se esta lista é válida. OBS: no NETBSD, o Postfix é uma alternativa. sendmail é o padrão-->.</para>
     </sect1>
 
     <sect1>
@@ -398,7 +413,7 @@ Sep 24 05:54:55 localhost postfix/qmgr[4188]: 095EFE04C4: removed</computeroutpu
 
       <para>Neste exemplo, a mensagem foi entregue para o usuário
       <emphasis>yves</emphasis>, já que <emphasis>root</emphasis> é um <link
-      linkend="alias">alias</link> para esta caixa. </para>
+      linkend="alias">alias</link> para esta caixa.</para>
     </sect1>
   </chapter>
 
@@ -417,6 +432,12 @@ Sep 24 05:54:55 localhost postfix/qmgr[4188]: 095EFE04C4: removed</computeroutpu
 
         <para></para>
       </section>
+    </section>
+
+    <section>
+      <title>Configuração de DNS</title>
+
+      <para></para>
     </section>
   </chapter>
 
@@ -491,7 +512,7 @@ Sep 24 05:54:55 localhost postfix/qmgr[4188]: 095EFE04C4: removed</computeroutpu
 
           <glossdef>
             <para>Agente de Transferência de E-mails, do inglês
-            <foreignphrase>Mail Transfer Agent</foreignphrase>. </para>
+            <foreignphrase>Mail Transfer Agent</foreignphrase>.</para>
           </glossdef>
         </glossentry>
 
